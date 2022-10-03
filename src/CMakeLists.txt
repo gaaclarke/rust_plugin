@@ -5,16 +5,11 @@ cmake_minimum_required(VERSION 3.10)
 
 project(rust_plugin_library VERSION 0.0.1 LANGUAGES C)
 
-add_library(rust_plugin_1 SHARED
+# A library toplevel library has to exist or gradle will will skil the
+# `add_custom_target`.
+add_library(rust_plugin_mock SHARED
  "rust_plugin.c"
 )
-
-#set_target_properties(rust_plugin PROPERTIES
-#  PUBLIC_HEADER rust_plugin.h
-#  OUTPUT_NAME "rust_plugin"
-#)
-
-# target_compile_definitions(rust_plugin PUBLIC DART_SHARED_LIB)
 
 if(${ANDROID_ABI} STREQUAL "arm64-v8a")
 set(RUST_TARGET "aarch64-linux-android")
@@ -25,10 +20,8 @@ set(RUST_TARGET "i686-linux-android")
 elseif(${ANDROID_ABI} STREQUAL "x86_64")
 set(RUST_TARGET "x86_64-linux-android")
 else()
-set(RUST_TARGET "x86_64-apple-darwin")
-#message( FATAL_ERROR "unsupported abi ${ANDROID_ABI}" )
+message( FATAL_ERROR "unsupported abi ${ANDROID_ABI}" )
 endif()
-
 
 add_custom_target(rust_plugin ALL
   COMMAND cargo ndk -t ${ANDROID_ABI} build --release && cp "${CMAKE_SOURCE_DIR}/target/${RUST_TARGET}/release/librust_plugin.so" ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/librust_plugin.so
@@ -36,12 +29,4 @@ add_custom_target(rust_plugin ALL
   BYPRODUCTS "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/librust_plugin.so"
   VERBATIM)
 
-add_dependencies(rust_plugin_1 rust_plugin)
-
-message("${LINK_FLAGS}")
-
-#message("hey ${RUST_TARGET}")
-
-#target_link_libraries(rust_plugin 
-#  "-all_load"
-#  "${CMAKE_SOURCE_DIR}/target/${RUST_TARGET}/release/librust_plugin.a")
+add_dependencies(rust_plugin_mock rust_plugin)
